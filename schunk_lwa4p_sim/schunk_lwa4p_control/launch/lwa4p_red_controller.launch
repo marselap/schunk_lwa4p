@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+
+
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find schunk_lwa4p_control)/config/lwa4p_red_controller.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" ns="/lwa4p_red" args="joint_state_controller  
+      arm_1_joint_pos_controller
+      arm_2_joint_pos_controller
+      arm_3_joint_pos_controller
+      arm_4_joint_pos_controller
+      arm_5_joint_pos_controller
+      arm_6_joint_pos_controller
+
+      "/>
+
+
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <remap from="/joint_states" to="/lwa4p/joint_states"/>
+  </node-->
+
+</launch>
+

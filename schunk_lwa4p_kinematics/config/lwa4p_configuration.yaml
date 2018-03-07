@@ -1,0 +1,105 @@
+lwa4p_dual_configuration:
+  lwa4p_blue_global_pose:
+    x: 0
+    y: 0
+    z: 0
+    theta: 0
+    
+  lwa4p_red_global_pose:
+    x: 1.5
+    y: 0
+    z: 0
+    theta: 0
+
+lwa4p_blue:
+  DH_d:
+    d0: 651
+    d1: 0
+    d2: 0
+    d3: 316
+    d4: 0
+    d5: 85
+
+  DH_a:
+    a0: 0
+    a1: 369.2
+    a2: 0
+    a3: 0
+    a4: 0
+    a5: 0
+
+  DH_alpha:
+    alpha1: 1.570796327
+    alpha2: 0
+    alpha3: 1.570796327
+    alpha4: -1.570796327
+    alpha5: 1.570796327
+    alpha6: 0
+
+  Q0:
+    q0_0: 0
+    q0_1: 1.570796327
+    q0_2: 1.570796327
+    q0_3: 0
+    q0_4: 0
+    q0_5: 0
+
+  joint_limits:
+    joint1_min: -2.947
+    joint1_max: 2.947
+    joint2_min: -2.947
+    joint2_max: 2.947
+    joint3_min: -2.734
+    joint3_max: 2.734
+    joint4_min: -2.987
+    joint4_max: 2.987
+    joint5_min: -2.987
+    joint5_max: 2.987
+    joint6_min: -2.987
+    joint6_max: 2.987
+
+lwa4p_red:
+  DH_d:
+    d0: 651
+    d1: 0
+    d2: 0
+    d3: 365
+    d4: 0
+    d5: 85
+    
+  DH_a:
+    a0: 0
+    a1: 500
+    a2: 0
+    a3: 0
+    a4: 0
+    a5: 0
+  Q0:
+    q0_0: 0
+    q0_1: 1.570796327
+    q0_2: 1.570796327
+    q0_3: 0
+    q0_4: 0
+    q0_5: 0
+
+  DH_alpha:
+    alpha1: 1.570796327
+    alpha2: 0
+    alpha3: 1.570796327
+    alpha4: -1.570796327
+    alpha5: 1.570796327
+    alpha6: 0
+
+  joint_limits:
+    joint1_min: -2.947
+    joint1_max: 2.947
+    joint2_min: -2.947
+    joint2_max: 2.947
+    joint3_min: -2.734
+    joint3_max: 2.734
+    joint4_min: -2.987
+    joint4_max: 2.987
+    joint5_min: -2.987
+    joint5_max: 2.987
+    joint6_min: -2.987
+    joint6_max: 2.987

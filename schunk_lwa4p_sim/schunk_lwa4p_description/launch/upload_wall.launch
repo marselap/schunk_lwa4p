@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- send wall urdf to param server -->
+	<group ns="wall">
+		<param name="robot_description" command="$(find xacro)/xacro.py '$(find schunk_lwa4p_description)/urdf/wall.urdf.xacro'" />
+	</group>
+
+
+</launch>

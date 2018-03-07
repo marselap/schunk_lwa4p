@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- send lwa urdf to param server -->
+	<group ns="lwa4p_blue">
+		<param name="robot_description" command="$(find xacro)/xacro.py '$(find schunk_lwa4p_description)/urdf/schunk_lwa4p_blue.urdf.xacro'" />
+	</group>
+
+
+</launch>

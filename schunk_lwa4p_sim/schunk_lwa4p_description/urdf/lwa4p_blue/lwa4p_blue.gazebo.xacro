@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/lwa4p_blue</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+
+
+  <xacro:macro name="schunk_lwa4p_blue_gazebo" params="name">
+
+    <gazebo reference="${name}_0_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Schunk/LightGrey" />
+    </gazebo>
+
+    <gazebo reference="${name}_1_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Schunk/LightGrey" />
+    </gazebo>
+
+    <gazebo reference="${name}_2_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Gazebo/Blue" />
+    </gazebo>
+
+    <gazebo reference="${name}_3_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Schunk/LightGrey" />
+    </gazebo>
+
+    <gazebo reference="${name}_4_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Gazebo/Blue" />
+    </gazebo>
+
+    <gazebo reference="${name}_5_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Schunk/LightGrey" />
+    </gazebo>
+
+    <gazebo reference="${name}_6_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Schunk/LightGrey" />
+    </gazebo>
+
+    <gazebo reference="${name}_ft_sensor_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Gazebo/Green" />
+    </gazebo>
+
+    <!-- Enable the Joint Feedback -->
+    <gazebo reference="${name}_ft_sensor_joint">
+    <provideFeedback>true</provideFeedback>
+    <stopCfm>0.08</stopCfm>
+    <stopErp>0.2</stopErp>
+    <implicitSpringDamper>true</implicitSpringDamper>
+    </gazebo>
+
+    <gazebo reference="${name}_tool_link">
+    <provideFeedback>true</provideFeedback>
+    </gazebo>
+
+    <!-- The ft_sensor plugin  -->
+    <gazebo>
+        <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+          <updateRate>100.0</updateRate>
+          <robotNamespace>/lwa4p_blue</robotNamespace>
+          <topicName>ft_sensor_topic</topicName>
+          <jointName>${name}_ft_sensor_joint</jointName>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.0001</stddev> <!-- change this to simulate noise -->
+        </noise>
+
+        </plugin>
+    </gazebo>
+
+    <!-- Mount a generic pose sensor at link sensor1-->
+    <gazebo>
+      <plugin filename="libmav_gazebo_pose_plugin.so" name="pose_sensor1">
+        <robotNamespace>/lwa4p_blue</robotNamespace>
+        <linkName>${name}_ft_sensor_link</linkName>
+        <poseTopic>sensors/pose1</poseTopic>
+        <measurementDivisor>1</measurementDivisor> <!-- only every (seq % measurementDivisor) == 0 measurement is published [int]  staviti na 1-->
+        <measurementDelay>0</measurementDelay> <!-- time that measurement gets held back before it's published in [simulation cycles (int)] -->
+        <unknownDelay>0.0</unknownDelay> <!-- additional delay, that just gets added to the timestamp [s] -->
+        <noiseNormalP>0.0 0.0 0.0</noiseNormalP> <!-- standard deviation of additive white gaussian noise [m]  staviti na nulu -->
+        <noiseNormalQ>0.0 0.0 0.0</noiseNormalQ> <!-- standard deviation white gaussian noise [rad]: q_m = q*quaternionFromSmallAngleApproximation(noiseNormalQ)  staviti na nulu-->
+        <noiseUniformP>0 0 0</noiseUniformP> <!-- symmetric bounds of uniform noise [m] -->
+        <noiseUniformQ>0 0 0</noiseUniformQ> <!-- symmetric bounds of uniform noise [rad], computation see above -->
+      </plugin>
+    </gazebo>
+
+
+    <gazebo reference="${name}_tool_link">
+      <gravity>true</gravity>
+      <self_collide>false</self_collide>
+      <material value="Gazebo/Black" />
+      <provideFeedback>true</provideFeedback>
+    </gazebo>
+
+
+
+  </xacro:macro>
+
+
+
+
+
+</robot>

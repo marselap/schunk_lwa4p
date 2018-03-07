@@ -1,0 +1,45 @@
+lwa4p_blue:
+  position:
+	q1: 2
+	q2: 2
+	q3: 2
+	q4: 2
+	q5: 2
+	q6: 2
+  speed:
+	q1: 1
+	q2: 1
+	q3: 1
+	q4: 1
+	q5: 1
+	q6: 1
+  acceleration:
+	q1: 0.7
+	q2: 0.7
+	q3: 0.7
+	q4: 0.7
+	q5: 0.7
+	q6: 0.7
+
+lwa4p_red:
+  position:
+	q1: 2
+	q2: 2
+	q3: 2
+	q4: 2
+	q5: 2
+	q6: 2
+  speed:
+	q1: 1
+	q2: 1
+	q3: 1
+	q4: 1
+	q5: 1
+	q6: 1
+  acceleration:
+	q1: 0.7
+	q2: 0.7
+	q3: 0.7
+	q4: 0.7
+	q5: 0.7
+	q6: 0.7
