@@ -3,10 +3,10 @@
 
 ## Build prerequisites
 
-some ros packages... +
+[packages ](https://bitbucket.org/bmaric/schunk_lwa4p/wiki/Installation) +
 
 * [ros_controllers](https://github.com/otamachan/ros_controllers.git)
-* [schunk_canopen_driver](github.com/matkok/schunk_canopen_driver.git)
+* [schunk_canopen_driver](https://github.com/matkok/schunk_canopen_driver.git)
     - config/joint_limits.yaml: `max_velocity: 0.5` and `max_acceleration: 1.1` (for consistency with HoCook calculation in schunk_lwa4p_trajectory pkg)
     - package.xml: remove `<run_depend>ros_controllers</run_depend>`
 	- maybe add to urdf/lwa4p/lwa4p.gazebo.xacro (not sure if necessary)
@@ -16,9 +16,7 @@ some ros packages... +
 		         </plugin>
        </gazebo>
 		```
-* [fzi_icl_can](https://github.com/fzi-forschungszentrum-informatik/fzi_icl_can)
-* [fzi_icl_core](https://github.com/fzi-forschungszentrum-informatik/fzi_icl_core)
-* [schunk_lwa4p](https://github.com/marselap/schunk_lwa4p)
+* [schunk_lwa4p](https://github.com/marselap/schunk_lwa4p) 
 
 
 ## schunk_lwa4p
