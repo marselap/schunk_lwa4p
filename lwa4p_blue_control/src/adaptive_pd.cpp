@@ -246,7 +246,7 @@ double AdaptivePd::computeKp(double q, double e, double td)
     temp1 = (b1_ * td + 2 * b2_)/2;
     pk = e * q;
     temp2 = (b1_ * td - 2 * b2_)/2;
-    pk = error_prev_1_ * q_prev_;
+    pk1 = error_prev_1_ * q_prev_;
     kp = kp_ + temp1 * pk + temp2 * pk1;
     return kp;
 }
@@ -259,7 +259,7 @@ double AdaptivePd::computeKd(double q, double e, double td)
     temp1 = (c1_ * td + 2 * c2_)/2;
     pk = (e - error_prev_1_) * q / td;
     temp2 = (c1_ * td - 2 * c2_)/2;
-    pk = (error_prev_1_ - error_prev_2_) * q_prev_ / td;
+    pk1 = (error_prev_1_ - error_prev_2_) * q_prev_ / td;
     kd = kd_ + temp1 * pk + temp2 * pk1;
     return kd;
 }
