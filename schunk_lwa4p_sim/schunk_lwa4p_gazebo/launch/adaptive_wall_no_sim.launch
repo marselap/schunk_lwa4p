@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+
+    <!-- send lwa urdf to param server -->
+    <include file="$(find schunk_lwa4p_description)/launch/upload_lwa4p_blue.launch" />
+
+    <!-- Start trajectory planning node - HoCook method -->
+    <node pkg="schunk_lwa4p_trajectory" name="trajectoryPlanningNode" type="trajectoryPlanningNode" output="screen" />
+
+    <node pkg="schunk_lwa4p_trajectory" name="listenTrajectory" type="listenTrajectory.py" output="screen"/>
+
+    <node pkg="lwa4p_blue_control" name="adaptiveImpedanceControl" type="lwa4pBlueAdaptiveControlNode" output="screen"/>
+
+    <node pkg="lwa4p_blue_control" name="forceAmplitudeNode" type="forceAmplitudeNode" output="screen"/>
+</launch>

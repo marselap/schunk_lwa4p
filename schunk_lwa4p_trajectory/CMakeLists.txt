@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(schunk_lwa4p_trajectory)
 
-find_package(Boost REQUIRED 
+find_package(Boost REQUIRED
           system
-          filesystem 
-          date_time 
+          filesystem
+          date_time
           thread)
 
-find_package(catkin REQUIRED COMPONENTS 
+find_package(catkin REQUIRED COMPONENTS
           roscpp
           rospy
           roslib
           cmake_modules
           geometry_msgs
           std_msgs
-	  message_generation
+          moveit_msgs
+          message_generation
 )
 
 
@@ -49,13 +50,16 @@ generate_messages(
     ##actionlib_msgs
     geometry_msgs
     std_msgs
+    moveit_msgs
+
 )
 
 
 catkin_package(
-    INCLUDE_DIRS src include 
+    INCLUDE_DIRS src include
     LIBRARIES  ${Boost_LIBRARIES} yaml-cpp
-    CATKIN_DEPENDS  message_runtime geometry_msgs roscpp rospy std_msgs 
+    CATKIN_DEPENDS  message_runtime geometry_msgs roscpp rospy std_msgs moveit_msgs
+    
     DEPENDS system_lib boost
 )
 

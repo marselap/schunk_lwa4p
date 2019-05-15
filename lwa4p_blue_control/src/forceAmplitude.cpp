@@ -23,13 +23,15 @@ forceAmplitude::forceAmplitude(){
     lwa4p_blue.loadParameters(0, configFile);
 
     // init subscribers - SIMULATOR
-    lwa4pBlueJointStatesSub = n.subscribe("/lwa4p_blue/joint_states", 10, &forceAmplitude::lwa4pBlueJointStatesCallBack, this);
+    //lwa4pBlueJointStatesSub = n.subscribe("/lwa4p_blue/joint_states", 10, &forceAmplitude::lwa4pBlueJointStatesCallBack, this);
     // init subscribers - ROBOT
-    //lwa4pBlueJointStatesSub = n.subscribe("/blue_robot/joint_states", 10, &lwa4pBlueControl::lwa4pBlueJointStatesCallBack, this);
+    lwa4pBlueJointStatesSub = n.subscribe("/joint_states", 10, &forceAmplitude::lwa4pBlueJointStatesCallBack, this);
 
     // FORCE SENSOR - SIMULATOR
-    lwa4pBlueForceSensorSub = n.subscribe("/lwa4p_blue/ft_sensor_topic", 2, &forceAmplitude::lwa4pBlueForceSensorCallBack, this);
+    lwa4pBlueForceSensorSub = n.subscribe("/lwa4p_blue/ft_sensor_topic", 10, &forceAmplitude::lwa4pBlueForceSensorCallBack, this);
+
     // FORCE SENSOR - ROBOT
+    //lwa4pBlueForceSensorSub = n.subscribe("/force_sensor/filtered_ft_sensor", 2, &forceAmplitude::lwa4pBlueForceSensorCallBack, this);
     //lwa4pBlueForceSensorSub = n.subscribe("/optoforce_node/OptoForceWrench", 10, &forceAmplitude::lwa4pBlueForceSensorCallBack, this);
 
     // init publishers
@@ -47,7 +49,7 @@ void forceAmplitude::lwa4pBlueForceSensorCallBack(const geometry_msgs::WrenchSta
 
     force_reading(0,0) = msg.wrench.force.x;
     force_reading(1,0) = msg.wrench.force.y;
-    force_reading(2,0) = -(msg.wrench.force.z);
+    force_reading(2,0) = msg.wrench.force.z;
 }
 
 void forceAmplitude::lwa4pBlueJointStatesCallBack(const sensor_msgs::JointState &msg){
@@ -114,7 +116,8 @@ void forceAmplitude::run(){
         dim++;
         force(dim, 0) = force_reading(dim, 0);
         dim++;
-        force(dim, 0) = force_reading(dim, 0) - dk_w_result(8,0) * 0.19;
+        force(dim, 0) = force_reading(dim, 0);
+        //force(dim, 0) = force_reading(dim, 0) - dk_w_result(8,0) * 0.19;
 
         temp_result = 0.0;
         for(dim = 0; dim < 3; dim++) {
@@ -125,6 +128,7 @@ void forceAmplitude::run(){
         for(dim = 0; dim < 3; dim++) {
             force_filtered(dim, 0) = 0.85 * force_filtered(dim, 0) + 0.15 * force(dim, 0);
             force_local(dim, 0) = force_filtered(dim, 0);
+            force_local(dim, 0) = force(dim, 0);
         }
 
         force_global = dk_result * force_local;

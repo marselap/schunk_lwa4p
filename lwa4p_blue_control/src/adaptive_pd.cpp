@@ -246,7 +246,7 @@ double AdaptivePd::computeKp(double q, double e, double td)
     temp1 = (b1_ * td + 2 * b2_)/2;
     pk = e * q;
     temp2 = (b1_ * td - 2 * b2_)/2;
-    pk1 = error_prev_1_ * q_prev_;
+    pk = error_prev_1_ * q_prev_;
     kp = kp_ + temp1 * pk + temp2 * pk1;
     return kp;
 }
@@ -259,7 +259,7 @@ double AdaptivePd::computeKd(double q, double e, double td)
     temp1 = (c1_ * td + 2 * c2_)/2;
     pk = (e - error_prev_1_) * q / td;
     temp2 = (c1_ * td - 2 * c2_)/2;
-    pk1 = (error_prev_1_ - error_prev_2_) * q_prev_ / td;
+    pk = (error_prev_1_ - error_prev_2_) * q_prev_ / td;
     kd = kd_ + temp1 * pk + temp2 * pk1;
     return kd;
 }
@@ -327,12 +327,32 @@ double AdaptivePd::compute(double ref, double meas, bool contact_force)
                 ode_c1_ = e0 - ode_c2_;
                 model_error_time_ = 0;
                 f_ = f0_;
+                f0_prev_ = f0_;
                 td_prev_ = td;
                 error_prev_1_ = error;
             }
             error_model = AdaptivePd::modelDynamics(td);
             q = AdaptivePd::computeQ(error, error_model, td);
             flag_start = true;
+
+
+            f = AdaptivePd::computeF(q, td);
+            kp = AdaptivePd::computeKp(q, error, td);
+            kd = AdaptivePd::computeKd(q, error, td);
+
+            // proportional term
+            up = kp * error;
+            // derivative term
+            ud = kd * (error - error_prev_1_) / td;
+            // total = p + i + d
+            u = f + up + ud;
+
+            // saturation and anti-wind up
+            if (u > u_max_)
+                u = u_max_;
+            else if (u < u_min_)
+                u = u_min_;
+
         }
         else {
             error_model = error;
@@ -340,25 +360,8 @@ double AdaptivePd::compute(double ref, double meas, bool contact_force)
             q_prev_ = 0.0;
         }
 
-        f = AdaptivePd::computeF(q, td);
-        kp = AdaptivePd::computeKp(q, error, td);
-        kd = AdaptivePd::computeKd(q, error, td);
-
-        // proportional term
-        up = kp * error;
-        // derivative term
-        ud = kd * (error - error_prev_1_) / td;
-        // total = p + i + d
-        u = f + up + ud;
-
-        // saturation and anti-wind up
-        if (u > u_max_)
-            u = u_max_;
-        else if (u < u_min_)
-            u = u_min_;
-
         counter;
-        if ((f0_ == 101.0) & (counter < 5000)) {
+        if ((f0_ > -600.0) & (f0_ < -200.0) & (counter < 5000)) {
             std::cout << "q = " << q << "; f = " << f << "; kp = " << kp << "; kd = " << kd << "; u " << u << std::endl;
             std::cout << "ref = " << ref  << " meas = " << meas << std::endl;
             std::cout << "e = " << error << "; de = " << (error - error_prev_1_) / td << std::endl;

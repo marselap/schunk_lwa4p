@@ -36,6 +36,8 @@
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <control_msgs/JointTrajectoryControllerState.h>
 
+#include <moveit_msgs/ExecuteTrajectoryActionGoal.h>
+
 using namespace std;
 
 typedef struct DerivativeConditions
@@ -79,7 +81,7 @@ private:
 
     // Publishers and subscribers
     ros::Publisher trajectorySampledRedPub, trajectorySampledBluePub;
-    ros::Subscriber waypoints_redSub, waypoints_blueSub;
+    ros::Subscriber waypoints_redSub, waypoints_blueSub, waypoints_moveit;
 
     ros::Publisher robotTrajectoryRedPub;
 
@@ -97,6 +99,7 @@ private:
     // Waypoint callback and Eigen matrix where to save it
     void waypointRedCallback(const schunk_lwa4p_trajectory::WaypointArray &msg);
     void waypointBlueCallback(const schunk_lwa4p_trajectory::WaypointArray &msg);
+    void waypointMoveitCallback(const moveit_msgs::ExecuteTrajectoryActionGoal &msg);
     Eigen::MatrixXd Waypoints;
 
 

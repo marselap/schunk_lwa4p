@@ -25,24 +25,34 @@ class PublishWaypoints():
         self.msg2pub.waypoint_Q5 = [0,    0.6800,    0.7718,         1.57];
         self.msg2pub.waypoint_Q6 = [0,         0,         0,         1.57];
         '''
-        self.msg2pub.waypoint_Q1 = [0]
-        self.msg2pub.waypoint_Q2 = [0.5]
-        self.msg2pub.waypoint_Q3 = [-1.1]
-        self.msg2pub.waypoint_Q4 = [0.0]
-        self.msg2pub.waypoint_Q5 = [-0.25]
-        self.msg2pub.waypoint_Q6 = [0.7]
 
+        self.msg2pub.waypoint_Q1 = [0.0]
+        self.msg2pub.waypoint_Q2 = [-0.52] #-0.5794365034946314
+        self.msg2pub.waypoint_Q3 = [2.15] #1.967612461416539,
+        self.msg2pub.waypoint_Q4 = [-2.82] # -2.82
+        self.msg2pub.waypoint_Q5 = [1.12] #0.9745262353851335,
+        self.msg2pub.waypoint_Q6 = [-0.22] #-0.153399588393914
+        '''
+        self.msg2pub.waypoint_Q1 = [0.00]
+        self.msg2pub.waypoint_Q2 = [0.00]
+        self.msg2pub.waypoint_Q3 = [0.0]
+        self.msg2pub.waypoint_Q4 = [0.0]
+        self.msg2pub.waypoint_Q5 = [-0.0]
+        self.msg2pub.waypoint_Q6 = [0.0]
+        '''
 
     def run(self):
 
 
-
+        i = 0
         while not rospy.is_shutdown():
 
-            self.waypointsPub.publish(self.msg2pub)
-            print self.msg2pub.waypoint_Q1
-            print "Running!"
-            rospy.sleep(5)
+            if i < 2:
+                self.waypointsPub.publish(self.msg2pub)
+                print self.msg2pub.waypoint_Q1
+                print "Running!"
+            i += 1
+            rospy.sleep(1)
 
 
 if __name__ == '__main__':

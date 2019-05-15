@@ -35,20 +35,20 @@ adaptiveImpedanceControl::adaptiveImpedanceControl(){
     // init subscribers - SIMULATOR
     lwa4pBlueJointStatesSub = n.subscribe("/lwa4p_blue/joint_states", 10, &adaptiveImpedanceControl::lwa4pBlueJointStatesCallBack, this);
     // init subscribers - ROBOT
-    //lwa4pBlueJointStatesSub = n.subscribe("/blue_robot/joint_states", 10, &adaptiveImpedanceControl::lwa4pBlueJointStatesCallBack, this);
+    //lwa4pBlueJointStatesSub = n.subscribe("/joint_states", 10, &adaptiveImpedanceControl::lwa4pBlueJointStatesCallBack, this);
 
     lwa4pBlueOperationModeSub = n.subscribe("/lwa4p_blue/operation_mode", 10, &adaptiveImpedanceControl::lwa4pOperationModeCallBack, this);
     // FORCE SENSOR - SIMULATOR
     lwa4pBlueForceSensorSub = n.subscribe("/lwa4p_blue/ft_sensor_topic", 10, &adaptiveImpedanceControl::lwa4pBlueForceSensorCallBack, this);
     // FORCE SENSOR - ROBOT
-    //lwa4pBlueForceSensorSub = n.subscribe("/optoforce_node/OptoForceWrench", 10, &adaptiveImpedanceControl::lwa4pBlueForceSensorCallBack, this);
+    //lwa4pBlueForceSensorSub = n.subscribe("/force_sensor/filtered_ft_sensor", 10, &adaptiveImpedanceControl::lwa4pBlueForceSensorCallBack, this);
 
     lwa4pBlueForceReferenceSub = n.subscribe("/lwa4p_blue/force_reference", 2, &adaptiveImpedanceControl::lwa4pBlueForceReferenceCallBack, this);
     lwa4pBluePositionReferenceSub = n.subscribe("/lwa4p_blue/position_reference", 2, &adaptiveImpedanceControl::lwa4pBluePositionReferenceCallBack, this);
     lwa4pBlueOrientationXReferenceSub = n.subscribe("/lwa4p_blue/orientation_x", 2, &adaptiveImpedanceControl::lwa4pBlueOrientationXReferenceCallBack, this);
     lwa4pBlueOrientationZReferenceSub = n.subscribe("/lwa4p_blue/orientation_z", 2, &adaptiveImpedanceControl::lwa4pBlueOrientationZReferenceCallBack, this);
 
-    robotBlueProfilePub = n.advertise<control_msgs::FollowJointTrajectoryActionGoal>("/pos_based_pos_traj_controller_arm/follow_joint_trajectory/goal", 10);
+    robotBlueProfilePub = n.advertise<control_msgs::FollowJointTrajectoryActionGoal>("/pos_based_pos_traj_controller_arm/follow_joint_trajectory/goal", 1);
     //robotBlueProfilePub = n.advertise<trajectory_msgs::JointTrajectory>("/blue_robot/pos_based_pos_traj_controller_arm/command", 10);
 
     lwa4pBlueJoint1Pub = n.advertise<std_msgs::Float64>("/lwa4p_blue/arm_1_joint_pos_controller/command", 1);
@@ -70,6 +70,7 @@ adaptiveImpedanceControl::adaptiveImpedanceControl(){
     Xref = Eigen::MatrixXd::Zero(3, 1);
     xOrientation = Eigen::MatrixXd::Zero(3, 1);
     zOrientation = Eigen::MatrixXd::Zero(3, 1);
+    lwa4p_blue_prev_speed = Eigen::MatrixXd::Zero(6, 1);
 }
 
 adaptiveImpedanceControl::~adaptiveImpedanceControl(){
@@ -102,8 +103,8 @@ void adaptiveImpedanceControl::lwa4pBlueForceSensorCallBack(const geometry_msgs:
     force(0,0) = msg.wrench.force.x;
     force(1,0) = msg.wrench.force.y;
     //force(2,0) = 0.1*(msg.wrench.force.z-51.1) + 0.9*(force_z_mv);
-    //force(2,0) = 0.1*(-msg.wrench.force.z) + 0.9*(force(2,0));
-    force(2,0) = - msg.wrench.force.z;
+    force(2,0) = 0.1*(-msg.wrench.force.z) + 0.9*(force(2,0));
+    //force(2,0) = msg.wrench.force.z;
 
 }
 
@@ -191,20 +192,54 @@ control_msgs::FollowJointTrajectoryActionGoal adaptiveImpedanceControl::createRo
 
     trajectory_msgs::JointTrajectoryPoint point_current;
 
+    /*
     point_current.positions.push_back((double) lwa4p_blue_temp_q(0, 0) + (double) new_Q(0, 0));
     point_current.positions.push_back((double) lwa4p_blue_temp_q(1, 0) + (double) new_Q(1, 0));
     point_current.positions.push_back((double) lwa4p_blue_temp_q(2, 0) + (double) new_Q(2, 0));
     point_current.positions.push_back((double) lwa4p_blue_temp_q(3, 0) + (double) new_Q(3, 0));
     point_current.positions.push_back((double) lwa4p_blue_temp_q(4, 0) + (double) new_Q(4, 0));
     point_current.positions.push_back((double) lwa4p_blue_temp_q(5, 0) + (double) new_Q(5, 0));
-/*
-    point_current.velocities.push_back(new_Q(0, 0));
-    point_current.velocities.push_back(new_Q(1, 0));
-    point_current.velocities.push_back(new_Q(2, 0));
-    point_current.velocities.push_back(new_Q(3, 0));
-    point_current.velocities.push_back(new_Q(4, 0));
-    point_current.velocities.push_back(new_Q(5, 0));
+    */
+    point_current.positions.push_back( (double) new_Q(0, 0));
+    point_current.positions.push_back( (double) new_Q(1, 0));
+    point_current.positions.push_back( (double) new_Q(2, 0));
+    point_current.positions.push_back( (double) new_Q(3, 0));
+    point_current.positions.push_back( (double) new_Q(4, 0));
+    point_current.positions.push_back( (double) new_Q(5, 0));
 
+    double Td = 0.02;
+    Eigen::MatrixXd lwa4p_blue_temp_speed;
+    lwa4p_blue_temp_speed = Eigen::MatrixXd::Zero(6, 1);
+    for(int i = 0; i < 6; i++) {
+        lwa4p_blue_temp_speed(i, 0) = (new_Q(i, 0) - lwa4p_blue_temp_q(i, 0)) / Td;
+    }
+
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(0, 0));
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(1, 0));
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(2, 0));
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(3, 0));
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(4, 0));
+    point_current.velocities.push_back(lwa4p_blue_temp_speed(5, 0));
+
+    /*
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(0, 0) - lwa4p_blue_prev_speed(0, 0))/Td);
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(1, 0) - lwa4p_blue_prev_speed(1, 0))/Td);
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(2, 0) - lwa4p_blue_prev_speed(2, 0))/Td);
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(3, 0) - lwa4p_blue_prev_speed(3, 0))/Td);
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(4, 0) - lwa4p_blue_prev_speed(4, 0))/Td);
+    point_current.accelerations.push_back((lwa4p_blue_temp_speed(5, 0) - lwa4p_blue_prev_speed(5, 0))/Td);
+    */
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(0, 0)/Td);
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(1, 0)/Td);
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(2, 0)/Td);
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(3, 0)/Td);
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(4, 0)/Td);
+    point_current.accelerations.push_back(lwa4p_blue_temp_speed(5, 0)/Td);
+    for(int i = 0; i < 6; i++) {
+        lwa4p_blue_prev_speed(i, 0) = lwa4p_blue_temp_speed(i, 0);
+    }
+
+/*
     point_current.accelerations.push_back(0);
     point_current.accelerations.push_back(0);
     point_current.accelerations.push_back(0);
@@ -253,7 +288,7 @@ Eigen::MatrixXd adaptiveImpedanceControl::tMatrixToPosVector(Eigen::MatrixXd mat
 
 void adaptiveImpedanceControl::run(){
 
-    ros::Rate r(100);
+    ros::Rate r(50);
 
     Eigen::MatrixXd tool_vel, new_Q, position_reference;
     tool_vel = Eigen::MatrixXd::Zero(6, 1);
@@ -312,12 +347,12 @@ void adaptiveImpedanceControl::run(){
     int operation_mode_prev = 0;
 
     dim = 0;
-    forceController[dim].seta1(0.0); // 1e-3
-    forceController[dim].seta2(0.0); // 1e-5
-    forceController[dim].setb1(0.0); // 1e-3
-    forceController[dim].setb2(0.0); // 1e-4
-    forceController[dim].setc1(0.0); // 1e-6
-    forceController[dim].setc2(0.0); // 1e-9
+    forceController[dim].seta1(-1e-4); // 1e-3
+    forceController[dim].seta2(0.0); // 0
+    forceController[dim].setb1(1e-4); // 1e-4
+    forceController[dim].setb2(1e-5); // 1e-5
+    forceController[dim].setc1(1e-4); // 1e-5
+    forceController[dim].setc2(1e-7); // 1e-9
     forceController[dim].setwp(10.0);
     forceController[dim].setModelZeta(4.0);
     forceController[dim].setModelOmega(3.0);
@@ -373,7 +408,8 @@ void adaptiveImpedanceControl::run(){
         dim++;
         force_no_z_dc(dim, 0) = force(dim, 0);
         dim++;
-        force_no_z_dc(dim, 0) = force(dim, 0) - dk_w_result(8,0) * 0.19;
+        force_no_z_dc(dim, 0) = force(dim, 0);
+        //force_no_z_dc(dim, 0) = force(dim, 0) - dk_w_result(8,0) * 0.19;
 
         temp_result = 0.0;
         for(dim = 0; dim < 3; dim++) {
@@ -391,12 +427,14 @@ void adaptiveImpedanceControl::run(){
         force_local = Eigen::MatrixXd::Zero(4,1); // 4x1 instead of 3x1 for easier multiplication w/ 4x4 transformation matrix dk_result
         for (dim = 0; dim < 3; dim++) {
              force_local(dim, 0) = force_filtered(dim, 0);
+             force_local(dim, 0) = force_no_z_dc(dim, 0);
         }
         force_global = dk_result * force_local;
 
-        /*TODO: remove this when test done. Z axis control only */
-        force_global(0,0) = Fr(0,0);
-        force_global(1,0) = Fr(1,0);
+        /*TODO: remove this when test done. X axis control only */
+        //force_global(0,0) = Fr(0,0);
+        //force_global(1,0) = Fr(1,0);
+        //force_global(2,0) = Fr(2,0);
 
         if (operation_mode != 0 )
         {
@@ -409,6 +447,9 @@ void adaptiveImpedanceControl::run(){
                     Xr(dim, 0) = Xref(dim, 0);
                     Xr(dim, 1) = Xref(dim, 0);
                     Xr(dim, 2) = Xref(dim, 0);
+                    Xc(dim, 0) = dk_w_result(dim, 0);
+                    Xc(dim, 1) = dk_w_result(dim, 0);
+                    Xc(dim, 2) = dk_w_result(dim, 0);
                 }
             }
 
@@ -425,7 +466,7 @@ void adaptiveImpedanceControl::run(){
                 new_reference_flag = false;
             }
 
-            if (fabs(force_global(2, 0)) > contact_force_threshold) {
+            if (fabs(force_global(0, 0)) > contact_force_threshold) {
                 contact_force = true;
             }
 
@@ -470,21 +511,13 @@ void adaptiveImpedanceControl::run(){
             lwa4pBlueJoint5Pub.publish(joint5);
             lwa4pBlueJoint6Pub.publish(joint6);
 
-            /*
-            Eigen::MatrixXd new_Q_dir, new_q_dir_vector;
-            std_msgs::Float64MultiArray position_reference_msg;
-            new_Q_dir = lwa4p_blue.directKinematics(new_Q, 6);
-            new_q_dir_vector = tMatrixToPosVector(new_Q_dir);
-            position_reference_msg = makePositionMsg(new_q_dir_vector);
-            lwa4pBlueXcPub.publish(position_reference_msg);
-
-            position_reference_msg = makePositionMsg(position_reference);
-            lwa4pBluePositionReferencePub.publish(position_reference_msg);
-            */
-
             //schunk_lwa4p_trajectory::WaypointArray msg2publish;
             //msg2publish = makeWaypointsMsg(new_Q);
             //lwa4pBlueWaypointsPub.publish(msg2publish);
+
+            std_msgs::Float64MultiArray position_reference_msg;
+            position_reference_msg = makePositionMsg(position_reference);
+            lwa4pBlueXcPub.publish(position_reference_msg);
 
             new_trajectory = createRobotTrajectoryMsg(new_Q, 0);
             robotBlueProfilePub.publish(new_trajectory);

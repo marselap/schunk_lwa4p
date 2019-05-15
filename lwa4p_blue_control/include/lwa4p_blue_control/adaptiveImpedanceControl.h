@@ -102,7 +102,7 @@ class adaptiveImpedanceControl{
         ros::NodeHandle nhParams;
         ros::NodeHandle nhTopics;
 
-        Eigen::MatrixXd lwa4p_blue_temp_q;
+        Eigen::MatrixXd lwa4p_blue_temp_q, lwa4p_blue_prev_speed;
 
         Eigen::MatrixXd force;
 

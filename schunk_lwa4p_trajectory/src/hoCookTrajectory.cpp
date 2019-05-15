@@ -34,6 +34,7 @@ trajectoryPlanning::trajectoryPlanning()
     trajectorySampledBluePub = nhTopics.advertise<schunk_lwa4p_trajectory::TrajectorySampled>(
         "/lwa4p_blue/trajectory_sampled", 1);
 
+
     //robotTrajectoryRedPub = nhTopics.advertise<control_msgs::FollowJointTrajectoryActionGoal>("/red_robot/pos_based_pos_traj_controller_arm/follow_joint_trajectory/goal", 1);
 
 
@@ -41,6 +42,8 @@ trajectoryPlanning::trajectoryPlanning()
     //waypoints_redSub = nhTopics.subscribe("/lwa4p_red/waypoints", 1, &trajectoryPlanning::waypointRedCallback, this);
     waypoints_blueSub = nhTopics.subscribe("/lwa4p_blue/waypoints", 1,
         &trajectoryPlanning::waypointBlueCallback, this);
+    waypoints_moveit = nhTopics.subscribe("/execute_trajectory/goal", 1,
+        &trajectoryPlanning::waypointMoveitCallback, this);
     //cout << "Trajectory acceleration scale z = " << trajectoryAccScalerZ << endl;
     //cout << "Trajectory speed scale z = " << trajectorySpeedScalerZ << endl;
 
@@ -70,6 +73,64 @@ void trajectoryPlanning::run()
 {
     ros::spin();
 }
+
+void trajectoryPlanning::waypointMoveitCallback(const moveit_msgs::ExecuteTrajectoryActionGoal &msg)
+{
+    int len;
+    len = msg.goal.trajectory.joint_trajectory.points.size();
+    std::cout << "AAAAAAAAAA GOT WAYPOINTS" << std::endl;
+    std::cout << len << std::endl;
+
+    // std::cout << "=++++++++++++++++++++++++=" << std::endl;
+    TrajectoryDerivativeConditions conditions;
+    DerivativeConditions tempCond;
+    tempCond.speed = 0.0;
+    tempCond.acceleration = 0.0;
+    conditions.Q1.start = tempCond;
+    conditions.Q1.end = tempCond;
+    conditions.Q2.start = tempCond;
+    conditions.Q2.end = tempCond;
+    conditions.Q3.start = tempCond;
+    conditions.Q3.end = tempCond;
+    conditions.Q4.start = tempCond;
+    conditions.Q4.end = tempCond;
+    conditions.Q5.start = tempCond;
+    conditions.Q5.end = tempCond;
+    conditions.Q6.start = tempCond;
+    conditions.Q6.end = tempCond;
+
+    Eigen::MatrixXd WP_Q;
+    WP_Q = Eigen::MatrixXd::Zero(len, 6);
+
+    n = 6;
+    m = len;
+
+
+    for (int i = 0; i < len; i++ )
+    {
+        for (int joint = 0; joint < 6; joint++){
+            WP_Q(i, joint) = msg.goal.trajectory.joint_trajectory.points[i].positions[joint];
+        }
+    }
+    std::cout << "Algorithm BLUE started!" << endl;
+    schunk_lwa4p_trajectory::TrajectorySampled tempTrajectory;
+
+    if (WP_Q.rows() > 3)
+    {
+        // std::cout << "aaaa planning!!" << std::endl;
+        tempTrajectory = this->optimizedPlan(WP_Q);
+    }
+    else
+    {
+        std::cout << "Single point procedure" << endl;
+        tempTrajectory = this->point2point(WP_Q.row(WP_Q.rows()-1));
+    }
+    //
+    trajectorySampledBluePub.publish(tempTrajectory);
+    std::cout << "Trajectory BLUE published!" << endl;
+    std::cout << "==========================" << endl;
+}
+
 
 void trajectoryPlanning::waypointBlueCallback(const schunk_lwa4p_trajectory::WaypointArray &msg)
 {
@@ -190,6 +251,7 @@ void trajectoryPlanning::computeParametricTime(
 {
     double temp_t;
 
+    m = WP_Q.rows();
     for (int i = 0; i < m-1; i++)
     {
         temp_t = 0;
@@ -208,6 +270,7 @@ double trajectoryPlanning::hoCook34(
         TrajectoryDerivativeConditions initialConditions,
         std::vector<double> paramTime)
 {
+
     // 1. Compute matrices M, A Dq
     Eigen::MatrixXd M, A, Dq;
     this->createMatrixM(paramTime, M);
@@ -216,6 +279,9 @@ double trajectoryPlanning::hoCook34(
 
     // 2. Compute matrices B
     computeCoeffsB(B, WP_Q, Dq, paramTime);
+
+    std::cout << "got here coeffsB" << std::endl;
+
 
     // 3. Compute max speed and acceleration values
     Eigen::MatrixXd max_joints_speed, max_joints_acc;
@@ -338,6 +404,8 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::optimizedPlan(
     std::vector<double> paramTimeArray;
     this->computeParametricTime(WP_Q, paramTimeArray);
 
+
+
     // HoCook Algorithm - STEP 2
     // Following steps in subroutine in hoCook34, that can be called in each step of optimization
     // 1. Compute matrices M, A Dq
@@ -347,11 +415,21 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::optimizedPlan(
     TrajectoryDerivativeConditions initialConditions;
     S = hoCook34(B, WP_Q, initialConditions, paramTimeArray);
 
-    while ( S != 1 and niter < 10)
+    std::cout << "S = " << S << endl;
+
+
+    int tempParamTimeInt;
+    double tempParamTimeFloat;
+    while ( S > 1 and niter < 10)
     {
         // Modify parametric time
         for (int i = 0; i < m-1; i++)
-            paramTimeArray[i] = paramTimeArray[i]*S;
+        {
+            tempParamTimeInt = paramTimeArray[i]*S * trajectorySamplingFrequency;
+            tempParamTimeFloat = (tempParamTimeInt + 1.0) / trajectorySamplingFrequency;
+            //paramTimeArray[i] = paramTimeArray[i]*S;
+            paramTimeArray[i] = tempParamTimeFloat;
+        }
         S = hoCook34(B, WP_Q, initialConditions, paramTimeArray);
         // Loopand check if scale factor is 1 then algorithm is DONE
         niter ++;
@@ -372,6 +450,7 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::optimizedPlan(
 
 void trajectoryPlanning::createMatrixM(std::vector<double> t, Eigen::MatrixXd &M)
 {
+
     M = Eigen::MatrixXd::Zero(m - 2, m - 2);
     M(0, 0) = 3/t[0] + 2/t[1];
     M(1, 0) = 1/t[1];
@@ -515,6 +594,7 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::point2point(
         return_value.pose_joint_6.push_back(WP_Q(i, 5));
         return_value.speed_joint_6.push_back(0);
         return_value.acc_joint_6.push_back(0);
+
     }
     return return_value;
 }
@@ -532,8 +612,16 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::sampleTrajectory(
 
     schunk_lwa4p_trajectory::TrajectorySampled return_value;
 
+    int lastSampleMomentSegment;
+
     for (int seg = 0; seg < m-1; seg++)
     {
+        if (seg < m-2) {
+            lastSampleMomentSegment = tf[seg]*sampleFrequency - 1;
+        }
+        else {
+            lastSampleMomentSegment = tf[seg]*sampleFrequency;
+        }
         // loop joints
         for (int i = 0; i < n; i++)
         {
@@ -541,7 +629,8 @@ schunk_lwa4p_trajectory::TrajectorySampled trajectoryPlanning::sampleTrajectory(
             for (int j = 0; j < B[seg].cols(); j++)
                 temp_B.push_back(B[seg](i, j));
 
-            for (int t = 0; t <= tf[seg]*sampleFrequency; t++)
+//            for (int t = 0; t <= tf[seg]*sampleFrequency; t++)
+            for (int t = 0; t <= lastSampleMomentSegment; t++)
             {
                 if (B[seg].cols() == 5)
                 {

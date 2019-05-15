@@ -15,6 +15,7 @@ import math
 class ListenTrajectory():
     def __init__(self):
         rospy.Subscriber('lwa4p_blue/trajectory_sampled', TrajectorySampled, self.trajectoryBlue_cb, queue_size=1);
+        
         #rospy.Subscriber('lwa4p_red/trajectory_sampled', TrajectorySampled, self.trajectoryRed_cb);
         #rospy.Subscriber('lwa4p_red/waypoints', WaypointArray, self.waypoints_cb);
 
@@ -98,6 +99,9 @@ class ListenTrajectory():
         step_time = 0.02
 
         poruka = self.createRobotMsg(msg, start_time, step_time)
+        #print poruka
+        self.trajPub_blue.publish(poruka)
+        print 'Published to blue robot'
 
         print len(self.Q1)
         for i in range(0, len(self.Q1)):
@@ -114,10 +118,6 @@ class ListenTrajectory():
                 rospy.sleep(1.0/50)
             #print (self.Q1[i], self.Q2[i], self.Q3[i], self.Q4[i], self.Q5[i], self.Q6[i])
         print "End msg"
-
-        #print poruka
-        self.trajPub_blue.publish(poruka)
-        print 'Published to blue robot'
 
 
     def createRobotMsg(self, msg, start_time, step_time):
@@ -174,21 +174,29 @@ class ListenTrajectory():
             tocka.velocities.append(msg.speed_joint_4[i])
             tocka.velocities.append(msg.speed_joint_5[i])
             tocka.velocities.append(msg.speed_joint_6[i])
-            '''
-            tocka.velocities.append(0)
-            tocka.velocities.append(0)
-            tocka.velocities.append(0)
-            tocka.velocities.append(0)
-            tocka.velocities.append(0)
-            tocka.velocities.append(0)
-            '''
-            tocka.accelerations.append(0)
-            tocka.accelerations.append(0)
-            tocka.accelerations.append(0)
-            tocka.accelerations.append(0)
-            tocka.accelerations.append(0)
-            tocka.accelerations.append(0)
 
+            tocka.accelerations.append(msg.acc_joint_1[i])
+            tocka.accelerations.append(msg.acc_joint_2[i])
+            tocka.accelerations.append(msg.acc_joint_3[i])
+            tocka.accelerations.append(msg.acc_joint_4[i])
+            tocka.accelerations.append(msg.acc_joint_5[i])
+            tocka.accelerations.append(msg.acc_joint_6[i])
+
+            '''
+            tocka.velocities.append(0)
+            tocka.velocities.append(0)
+            tocka.velocities.append(0)
+            tocka.velocities.append(0)
+            tocka.velocities.append(0)
+            tocka.velocities.append(0)
+
+            tocka.accelerations.append(0)
+            tocka.accelerations.append(0)
+            tocka.accelerations.append(0)
+            tocka.accelerations.append(0)
+            tocka.accelerations.append(0)
+            tocka.accelerations.append(0)
+            '''
             temp_time = temp_time + step_time
 
             tocka.time_from_start.nsecs = round((temp_time - math.floor(temp_time))*pow(10, 9))

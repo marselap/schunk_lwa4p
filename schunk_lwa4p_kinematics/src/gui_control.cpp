@@ -154,53 +154,12 @@ void guiControl::run(){
 
             joints_reference = lwa4p_blue.taylorPathCheck(dk_w_result, position_reference, lwa4p_blue_temp_q, 1);
 
-            /*
-            std::cout << "=======================================" << endl;
-            std::cout << "=======================================" << endl;
-            std::cout << "=======================================" << endl;
-            std::cout << "=======================================" << endl;
-            */
             std::cout << "Current position: " << endl;
             std::cout << dk_w_result << endl;
             std::cout << "reference position: " << endl;
             std::cout << position_reference << endl;
             std::cout << "......................................." << endl;
 
-            /*
-            std::cout << "Current joint states: " << endl;
-            std::cout << lwa4p_blue_temp_q << endl;
-
-            std::cout << "......................................." << endl;
-            std::cout << "Taylor result: " << endl;
-            std::cout << "(" << joints_reference.rows() << ", " << joints_reference.cols() << ")" << endl;
-            std::cout << "Taylor result START: " << endl;
-            for(int i = 0; i < 6; i++) {
-                std::cout << joints_reference(i, 0) << endl;
-            }
-            Eigen::MatrixXd taylor_end_q;
-            taylor_end_q = Eigen::MatrixXd::Zero(6,1);
-            std::cout << "Taylor result END: " << endl;
-            for(int i = 0; i < 6; i++) {
-                std::cout << joints_reference(i, joints_reference.cols()-1) << endl;
-                taylor_end_q(i,0) = joints_reference(i, joints_reference.cols()-1);
-            }
-
-            std::cout << "......................................." << endl;
-            std::cout << "Taylor end point: " << endl;
-            dk_result = lwa4p_blue.directKinematics(taylor_end_q, 6);
-            dk_w_result(0, 0) = dk_result(0, 3);
-            dk_w_result(1, 0) = dk_result(1, 3);
-            dk_w_result(2, 0) = dk_result(2, 3);
-            dk_w_result(3, 0) = dk_result(0, 0);
-            dk_w_result(4, 0) = dk_result(1, 0);
-            dk_w_result(5, 0) = dk_result(2, 0);
-            dk_w_result(6, 0) = dk_result(0, 2);
-            dk_w_result(7, 0) = dk_result(1, 2);
-            dk_w_result(8, 0) = dk_result(2, 2);
-            std::cout << dk_w_result << endl;
-            */
-
-            //std::cout << joints_reference << endl;
         }
         else {
 
@@ -234,10 +193,10 @@ void guiControl::run(){
                 dk_w_result(8, 0) = dk_result(2, 2);
                 std::cout << "Dir(inv(reference point)): " << endl;
                 std::cout << dk_w_result << endl;
-                joints_reference = Eigen::MatrixXd::Zero(6,4);
-                for (int j = 0; j < 4; j++) {
+                joints_reference = Eigen::MatrixXd::Zero(6,5);
+                for (int j = 0; j < 5; j++) {
                     for (int i = 0; i < 6; i++) {
-                        joints_reference(i, j) = 0.25 * (j + 1) * (joints_reference_final(i, 0) - lwa4p_blue_temp_q(i, 0)) + lwa4p_blue_temp_q(i, 0));
+                        joints_reference(i, j) = 0.25 * (j) * (joints_reference_final(i, 0) - lwa4p_blue_temp_q(i, 0)) + lwa4p_blue_temp_q(i, 0);
                     }
                 }
                 std::cout << "joints_reference" << std::endl;

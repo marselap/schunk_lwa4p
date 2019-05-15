@@ -8,8 +8,6 @@
     </plugin>
   </gazebo>
 
-
-
   <xacro:macro name="schunk_lwa4p_blue_gazebo" params="name">
 
     <gazebo reference="${name}_0_link">
@@ -104,7 +102,6 @@
       </plugin>
     </gazebo>
 
-
     <gazebo reference="${name}_tool_link">
       <gravity>true</gravity>
       <self_collide>false</self_collide>
@@ -112,12 +109,6 @@
       <provideFeedback>true</provideFeedback>
     </gazebo>
 
-
-
   </xacro:macro>
-
-
-
-
 
 </robot>
